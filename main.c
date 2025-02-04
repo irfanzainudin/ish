@@ -1,11 +1,20 @@
 // ish: Irfan's Shell
 // Modified from: https://brennan.io/2015/01/16/write-a-shell-in-c/
 
-#include <sys/wait.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <unistd.h>
+
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 // Function declarations for builtin shell commands:
 int ish_cd(char** args);
@@ -178,6 +187,27 @@ char* ish_read_line(void)
     }
 }
 
+int solve_math_problems_first(int* correct_answer) {
+    // Generate random numbers
+    int o1 = rand() % 100;
+    int o2 = rand() % 100;
+    int ca = o1 + o2; // ca == correct answer
+
+    printf(ANSI_COLOR_CYAN "%d + %d = " ANSI_COLOR_RESET, o1, o2);
+    char* answer = ish_read_line();
+    // A trick taken from: https://stackoverflow.com/a/8257728/9311041
+    int length = snprintf(NULL, 0, "%d", ca);
+    char str[length + 2];
+    sprintf(str, "%d", ca);
+    if (strcmp(answer, str) == 0) {
+        return 1;
+    } else {
+        *correct_answer = ca;
+        return 0;
+    }
+}
+
+#define MAX_CORRECT_ANSWER_CHARS 5
 void ish_loop(void)
 {
     char* line;
@@ -186,10 +216,22 @@ void ish_loop(void)
 
     do {
         printf("ish %% ");
+        
         line = ish_read_line();
         args = ish_split_line(line);
+        
+        // Stay sharp
+        int* correct_answer = calloc(MAX_CORRECT_ANSWER_CHARS, sizeof(int));
+        int correct_onot = solve_math_problems_first(correct_answer);
+        if (correct_onot) {
+            printf(ANSI_COLOR_GREEN "Correct!" ANSI_COLOR_RESET "\n");
+        } else {
+            printf(ANSI_COLOR_RED "Wrong! " ANSI_COLOR_RESET ANSI_COLOR_GREEN "Correct answer was %d" ANSI_COLOR_RESET "\n", *correct_answer);
+        }
+        
         status = ish_execute(args);
 
+        free(correct_answer);
         free(line);
         free(args);
     } while (status);
@@ -198,6 +240,9 @@ void ish_loop(void)
 int main(int argc, char** argv)
 {
     // Load config files
+
+    // Initialise random number generator
+    srand(time(NULL));   // Initialization, should only be called once
 
     // Run command loop
     ish_loop();
