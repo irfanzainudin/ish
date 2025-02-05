@@ -187,13 +187,38 @@ char* ish_read_line(void)
     }
 }
 
+int get_correct_answer(int rand_op, int o1, int o2) {
+    if (rand_op == 0) {
+        return o1 + o2;
+    } else if (rand_op == 1) {
+        return o1 - o2;
+    } else if (rand_op == 2) {
+        return o1 * o2;
+    } else {
+        return o1 / o2;
+    }
+}
+
+char* get_op(int rand_op) {
+    if (rand_op == 0) {
+        return "+";
+    } else if (rand_op == 1) {
+        return "-";
+    } else if (rand_op == 2) {
+        return "*";
+    } else {
+        return "/";
+    }
+}
+
 int solve_math_problems_first(int* correct_answer) {
     // Generate random numbers
     int o1 = rand() % 100;
     int o2 = rand() % 100;
-    int ca = o1 + o2; // ca == correct answer
+    int op = rand() % 4;
+    int ca = get_correct_answer(op, o1, o2);
 
-    printf(ANSI_COLOR_CYAN "%d + %d = " ANSI_COLOR_RESET, o1, o2);
+    printf(ANSI_COLOR_CYAN "%d %s %d = " ANSI_COLOR_RESET, o1, get_op(op), o2);
     char* answer = ish_read_line();
     // A trick taken from: https://stackoverflow.com/a/8257728/9311041
     int length = snprintf(NULL, 0, "%d", ca);
